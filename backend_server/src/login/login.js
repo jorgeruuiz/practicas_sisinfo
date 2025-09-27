@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
-import { activeSockets } from '../../server2.js';
+import { activeSockets } from '../../server.js';
 import { ActiveXObjects } from '../rooms/rooms.js';
 
 // Generar un token de verificación para el correo
