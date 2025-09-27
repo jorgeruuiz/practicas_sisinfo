@@ -70,7 +70,6 @@ async function newConnection(socket) {
     // ------------------------------------------------------------------------------------------
     // Eventos en tiempo real (partidas emparejadas)
     // ------------------------------------------------------------------------------------------
-
 }
 
 // Escuchar eventos de conexión al servidor
