@@ -1,8 +1,8 @@
 import { db } from '../db/db.js';
 import { partidaCompetitiva, usuario, preguntas } from '../db/schemas/schemas.js';
 import { eq, or, and, sql, isNull } from "drizzle-orm";
-import { io } from '../../server2.js';
-import { activeSockets } from '../../server2.js';
+import { io } from '../../server.js';
+import { activeSockets } from '../../server.js';
 import crypto from 'crypto';
 
 // ------------------------------------------------------------------------------------------------
@@ -12,4 +12,4 @@ import crypto from 'crypto';
 // ------------------------------------------------------------------------------------------------
 
 // Objeto que mantiene las partidas activas en memoria
-export let ActiveGames = {};
+export let ActiveXObjects = {};
