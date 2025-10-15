@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
-import { findGame } from './src/rooms/rooms.js';
+import { findGame, receivePlayerResults } from './src/rooms/rooms.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -83,6 +83,18 @@ async function newConnection(socket) {
         }
     });
 
+    // Evento para recibir el informe final de aciertos desde el cliente
+    socket.on('reportResults', async (data) => {
+        try {
+            const partidaId = data?.partidaId;
+            const idJugador = data?.idJugador;
+            const totalAciertos = data?.totalAciertos;
+            await receivePlayerResults(partidaId, idJugador, totalAciertos);
+        } catch (err) {
+            console.error('Error en handler reportResults:', err);
+            socket.emit('error', { message: 'Error interno al procesar reportResults' });
+        }
+    });
     // ------------------------------------------------------------------------------------------
 }
 

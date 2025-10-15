@@ -41,6 +41,55 @@ async function runWithCredentials(NombreUser, Contrasena) {
   socket.on('partidaEncontrada', (d) => console.log('partidaEncontrada', d));
   socket.on('error', (e) => console.log('socket error', e));
 
+  // Mostrar preguntas recibidas cuando la partida está lista
+  socket.on('partidaLista', (payload) => {
+    try {
+      console.log('\n--- partidaLista recibida ---');
+      console.log('partidaId:', payload.partidaId);
+      const qs = payload.preguntas || [];
+      console.log(`Preguntas recibidas: ${qs.length}`);
+      qs.forEach((q, idx) => {
+        console.log(`\n${idx + 1}. ${q.pregunta}`);
+        console.log(`   A) ${q.respuesta_correcta}`);
+        console.log(`   B) ${q.respuesta_incorrecta1}`);
+        console.log(`   C) ${q.respuesta_incorrecta2}`);
+        console.log(`   D) ${q.respuesta_incorrecta3}`);
+        if (q.tematica) console.log(`   Temática: ${q.tematica}`);
+        if (q.dificultad) console.log(`   Dificultad: ${q.dificultad}`);
+      });
+      console.log('--- fin de preguntas ---\n');
+      // Simular tiempo de respuesta del jugador y enviar total de aciertos
+      try {
+        const totalPreg = qs.length;
+        // Simular aciertos aleatorios entre 0 y totalPreg
+        const simulatedAciertos = Math.floor(Math.random() * (totalPreg + 1));
+        const delayMs = 2000 + Math.floor(Math.random() * 4000); // 2-6s
+        console.log(`Simulando envío de ${simulatedAciertos} aciertos en ${delayMs}ms...`);
+        setTimeout(() => {
+          // Evento personalizado para reportar resultados; el servidor debe escuchar este evento
+          socket.emit('reportResults', { partidaId: payload.partidaId, idJugador: publicUser.id, totalAciertos: simulatedAciertos });
+          console.log('Reporte enviado:', { partidaId: payload.partidaId, totalAciertos: simulatedAciertos });
+        }, delayMs);
+
+        setTimeout(async () => {
+            console.log('Simulando desconexión del socket');
+            socket.disconnect();
+            process.exit(0);
+            
+        }, delayMs + 2000); // desconectar 2s después de enviar resultados
+
+      } catch (e) {
+        console.error('Error al simular envio de aciertos:', e);
+      }
+    } catch (e) {
+      console.error('Error mostrando partidaLista:', e);
+    }
+  });
+
+  socket.on('partidaFinalizada', (summary) => {
+    console.log('partidaFinalizada recibida:', summary);
+  });
+
   socket.on('disconnect', () => {
     console.log('Socket desconectado');
     process.exit(0);
