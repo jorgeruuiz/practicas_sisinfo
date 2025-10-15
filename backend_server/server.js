@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
+import { findGame } from './src/rooms/rooms.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -40,6 +41,7 @@ async function newConnection(socket) {
     // Aquí habrá que gestionar los posibles eventos/mensajes que nos pueden llegar del cliente
     console.log("Escuchando eventos...");
 
+    // ------------------------------------------------------------------------------------------
     // Envío de heartbeats de forma periódica (cada 5 segundos) por parte del servidor
     // para asegurar que los sockets de los clientes no se desconecten por inactividad
     // ------------------------------------------------------------------------------------------
@@ -69,6 +71,18 @@ async function newConnection(socket) {
 
     // ------------------------------------------------------------------------------------------
     // Eventos en tiempo real (partidas emparejadas)
+    // ------------------------------------------------------------------------------------------
+
+    // Evento para buscar una partida competitiva
+    socket.on('buscarPartida', async (data) => {
+        try {
+            await findGame(socket, data);
+        } catch (err) {
+            console.error('Error en handler buscarPartida:', err);
+            socket.emit('error', { message: 'Error interno al procesar buscarPartida' });
+        }
+    });
+
     // ------------------------------------------------------------------------------------------
 }
 
