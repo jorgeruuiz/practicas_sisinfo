@@ -4,6 +4,7 @@ import http from 'http';
 import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
 import { findGame, receivePlayerResults } from './src/rooms/rooms.js';
+import { createFriendRequest, acceptFriendRequestById, removeFriendByUsers } from './src/friendship/friends.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -80,6 +81,61 @@ async function newConnection(socket) {
         } catch (err) {
             console.error('Error en handler buscarPartida:', err);
             socket.emit('error', { message: 'Error interno al procesar buscarPartida' });
+        }
+    });
+
+    // ------------------------------------------------------------------------------------------
+    // Eventos de amistad vía WebSocket
+    // ------------------------------------------------------------------------------------------
+    socket.on('friend:request', async (data) => {
+        try {
+            const fromId = data?.fromId;
+            const toId = data?.toId;
+            const result = await createFriendRequest(fromId, toId);
+            socket.emit('friend:request:ok', result);
+            // Notificar al destinatario si está conectado
+            if (activeSockets.has(toId)) {
+                const s = activeSockets.get(toId);
+                s.emit('friend:incoming', { fromId, id: result.id });
+            }
+        } catch (err) {
+            console.error('Error en friend:request', err);
+            socket.emit('friend:error', { message: String(err) });
+        }
+    });
+
+    socket.on('friend:accept', async (data) => {
+        try {
+            const requestId = data?.requestId;
+            const accepterId = data?.accepterId;
+            const result = await acceptFriendRequestById(requestId, accepterId);
+            socket.emit('friend:accept:ok', result);
+            // Notificar al remitente si está conectado
+            const reqs = await (await import('./src/db/db.js')).db.select().from((await import('./src/db/schemas/schemas.js')).amistad).where((await import('./src/db/schemas/schemas.js')).amistad.id.eq(requestId));
+            const req = reqs[0];
+            if (req && activeSockets.has(req.Remitente)) {
+                const s = activeSockets.get(req.Remitente);
+                s.emit('friend:accepted', { by: accepterId, id: requestId });
+            }
+        } catch (err) {
+            console.error('Error en friend:accept', err);
+            socket.emit('friend:error', { message: String(err) });
+        }
+    });
+
+    socket.on('friend:remove', async (data) => {
+        try {
+            const userA = data?.userA;
+            const userB = data?.userB;
+            const result = await removeFriendByUsers(userA, userB);
+            socket.emit('friend:remove:ok', result);
+            if (activeSockets.has(userB)) {
+                const s = activeSockets.get(userB);
+                s.emit('friend:removed', { by: userA });
+            }
+        } catch (err) {
+            console.error('Error en friend:remove', err);
+            socket.emit('friend:error', { message: String(err) });
         }
     });
 

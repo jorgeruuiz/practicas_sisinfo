@@ -76,3 +76,17 @@ export const preguntas = sqliteTable('preguntas', {
 
 export const preguntasSelectSchema = createSelectSchema(preguntas).partial()
 export const preguntasInsertSchema = createInsertSchema(preguntas).partial()
+
+// ------------------------------------------------------------------------------------------------
+// AMISTAD
+// ------------------------------------------------------------------------------------------------
+export const amistad = sqliteTable('amistad', {
+    id: text('id').primaryKey(),
+    created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+    Remitente: text('Remitente').references(() => usuario.id),
+    Destinatario: text('Destinatario').references(() => usuario.id),
+    Estado: text('Estado') // 'pending', 'accepted', 'rejected'
+})
+
+export const amistadSelectSchema = createSelectSchema(amistad).partial()
+export const amistadInsertSchema = createInsertSchema(amistad).partial()
