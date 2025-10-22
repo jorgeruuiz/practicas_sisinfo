@@ -66,7 +66,7 @@ async function interactiveClient() {
 
     // Interactive loop
     while (true) {
-      const cmd = (await rl.question('\nComando (send/accept/remove/list/quit): ')).trim();
+      const cmd = (await rl.question('\nComando (send/accept/remove/list/msg/thread/quit): ')).trim();
       if (cmd === 'quit') break;
 
       if (cmd === 'send') {
@@ -113,6 +113,41 @@ async function interactiveClient() {
         }
       } else if (cmd === 'list') {
         console.log('Incoming requests cached:', incomingRequests);
+      } else if (cmd === 'msg') {
+        // send a direct message to a friend by NombreUser
+        const targetName = await rl.question('Target NombreUser to send message: ');
+        if (!targetName) { console.log('Target required'); continue; }
+        const text = await rl.question('Message text: ');
+        if (!text) { console.log('Message empty, aborted'); continue; }
+        try {
+          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
+          const body = await res.json();
+          const targetId = body.id;
+          const payload = { fromId: publicUser.id, toId: targetId, texto: text };
+          const r2 = await fetch('http://localhost:3000/chat/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const resp = await r2.json().catch(()=>null);
+          if (!r2.ok) { console.error('sendMessage failed', r2.status, resp); } else { console.log('Message sent:', resp); }
+        } catch (err) {
+          console.error('Error sending message', err);
+        }
+      } else if (cmd === 'thread') {
+        // list thread with a friend by NombreUser
+        const targetName = await rl.question('Target NombreUser to list thread: ');
+        if (!targetName) { console.log('Target required'); continue; }
+        try {
+          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
+          const body = await res.json();
+          const targetId = body.id;
+          const q = `http://localhost:3000/chat/thread?userA=${encodeURIComponent(publicUser.id)}&userB=${encodeURIComponent(targetId)}`;
+          const r2 = await fetch(q);
+          if (!r2.ok) { const e = await r2.json().catch(()=>({})); console.error('thread fetch failed', r2.status, e); continue; }
+          const th = await r2.json();
+          console.log('Thread messages:', th.messages || th);
+        } catch (err) {
+          console.error('Error listing thread', err);
+        }
       } else {
         console.log('Unknown command');
       }

@@ -90,3 +90,18 @@ export const amistad = sqliteTable('amistad', {
 
 export const amistadSelectSchema = createSelectSchema(amistad).partial()
 export const amistadInsertSchema = createInsertSchema(amistad).partial()
+
+// ------------------------------------------------------------------------------------------------
+// MENSAJES (CHAT ENTRE AMIGOS)
+// ------------------------------------------------------------------------------------------------
+export const mensajes = sqliteTable('mensajes', {
+    id: text('id').primaryKey(),
+    created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+    fromId: text('fromId').references(() => usuario.id),
+    toId: text('toId').references(() => usuario.id),
+    texto: text('texto').notNull(),
+    leido: integer('leido').default(0) // 0 = false, 1 = true
+})
+
+export const mensajesSelectSchema = createSelectSchema(mensajes).partial()
+export const mensajesInsertSchema = createInsertSchema(mensajes).partial()

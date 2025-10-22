@@ -5,6 +5,9 @@ import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
 import { findGame, receivePlayerResults } from './src/rooms/rooms.js';
 import { createFriendRequest, acceptFriendRequestById, removeFriendByUsers } from './src/friendship/friends.js';
+import { db } from './src/db/db.js';
+import { amistad } from './src/db/schemas/schemas.js';
+import { eq } from 'drizzle-orm';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -111,8 +114,8 @@ async function newConnection(socket) {
             const result = await acceptFriendRequestById(requestId, accepterId);
             socket.emit('friend:accept:ok', result);
             // Notificar al remitente si está conectado
-            const reqs = await (await import('./src/db/db.js')).db.select().from((await import('./src/db/schemas/schemas.js')).amistad).where((await import('./src/db/schemas/schemas.js')).amistad.id.eq(requestId));
-            const req = reqs[0];
+            const reqs = await db.select().from(amistad).where(eq(amistad.id, requestId));
+            const req = reqs && reqs.length ? reqs[0] : null;
             if (req && activeSockets.has(req.Remitente)) {
                 const s = activeSockets.get(req.Remitente);
                 s.emit('friend:accepted', { by: accepterId, id: requestId });
