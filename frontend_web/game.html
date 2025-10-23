@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Cuestionados - Game</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      .col { display:flex; gap: 12px; }
+      textarea { width:100%; height:120px; }
+      .log { white-space: pre-wrap; background:#f7f7f7; padding:8px; border:1px solid #ddd; height:200px; overflow:auto }
+    </style>
+  </head>
+  <body>
+    <h1>Cuestionados - Game UI (test)</h1>
+    <div>
+      <strong id="me"></strong>
+    </div>
+    <div class="col">
+      <div style="flex:1">
+        <button id="btnFind">Buscar partida</button>
+        <button id="btnLogout">Logout</button>
+
+        <div id="screen">
+          <!-- Idle / Waiting / In-match screens will be rendered here by JS -->
+          <div id="idleScreen">
+            <p>Pulsa <strong>Buscar partida</strong> para empezar una partida competitiva.</p>
+          </div>
+          <div id="waitingScreen" style="display:none">
+            <p>Buscando oponente... espera.</p>
+          </div>
+          <div id="matchScreen" style="display:none">
+            <h3 id="matchTitle">Partida</h3>
+            <div id="questionsContainer"></div>
+            <div style="margin-top:12px">
+              <button id="btnCheck">Comprobar respuestas</button>
+            </div>
+            <div id="matchResult" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+      </div>
+      <div style="width:320px">
+        <h3>Última partida</h3>
+        <pre id="last"></pre>
+      </div>
+    </div>
+
+    <script type="module" src="/src/game.js"></script>
+  </body>
+</html>
