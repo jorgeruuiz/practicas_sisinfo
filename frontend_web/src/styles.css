@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Small helper to make the app look cleaner */
+body { @apply bg-gray-50 text-gray-800; }
+.btn { @apply bg-blue-600 text-white px-3 py-1 rounded; }
+.card { @apply bg-white shadow-sm rounded p-4 }
