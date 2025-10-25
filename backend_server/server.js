@@ -88,15 +88,16 @@ async function newConnection(socket) {
     });
 
     socket.on('cancelarBusqueda', async (data) => {
+        console.log("Cancelar busqueda recibido");
         try {
-            const idJugador = data.idJugador;
-            cancelFindGame(socket, idJugador);
+            // Pass the whole data object to cancelFindGame (it expects an object with idJugador)
+            await cancelFindGame(socket, data);
         } catch (err) {
             console.error('Error en handler cancelarBusqueda:', err);
             socket.emit('error', { message: 'Error interno al procesar cancelarBusqueda' });
         }
     });
-    
+
     // ------------------------------------------------------------------------------------------
     // Eventos de amistad vía WebSocket
     // ------------------------------------------------------------------------------------------

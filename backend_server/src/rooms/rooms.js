@@ -69,28 +69,41 @@ export async function findGame(socket, data) {
 export async function cancelFindGame(socket, data) {
 	try {
 		const idJugador = data?.idJugador || null;
-
+		console.log("cancelFindGame called for idJugador:", idJugador);
 		if (!idJugador) {
 			socket.emit('error', { message: 'Falta idJugador en data' });
 			return null;
 		}
 
-		// Actualizar estado de partida del usuario en BD a NULL
-		await db.update(usuario).set({ EstadoPartida: null }).where(eq(usuario.id, idJugador)).run();
+		console.log(`Procesando cancelación de búsqueda para jugador ${idJugador}`);
 
 		// Localizar la partida pendiente en memoria y en BD y eliminarla
 		for (const [gameId, partida] of Object.entries(ActiveXObjects)) {
 			if (partida.players.includes(idJugador) && partida.estado === 'esperando') {
+				// Primero intentar eliminar la fila en BD por su id (más fiable que por Jugador1/Jugador2)
+				try {
+					await db.delete(partidaCompetitiva).where(eq(partidaCompetitiva.id, gameId)).run();
+					console.log(`DB: partida ${gameId} eliminada (delete by id) por jugador ${idJugador}`);
+				} catch (e) {
+					console.warn(`DB: no se pudo eliminar partida ${gameId} por id, intentando fallback por Jugador1/Jugador2`, e?.message || e);
+					try {
+						await db.delete(partidaCompetitiva).where(and(eq(partidaCompetitiva.Jugador1, idJugador), eq(partidaCompetitiva.Jugador2, null))).run();
+						console.log(`DB: partida ${gameId} eliminada por jugador ${idJugador} (fallback)`);
+					} catch (e2) {
+						console.error(`DB: fallo al eliminar partida ${gameId} (fallback):`, e2?.message || e2);
+					}
+				}
+
 				// Eliminar partida de la memoria
 				delete ActiveXObjects[gameId];
 
-				// Eliminar partida de la BD
-				await db.delete(partidaCompetitiva).where(eq(partidaCompetitiva.id, gameId)).run();
-
-				console.log(`Partida ${gameId} eliminada por jugador ${idJugador}`);
+				console.log(`Partida ${gameId} eliminada en memoria por jugador ${idJugador}`);
 				break;
 			}
 		}
+
+		// Cambiar el EstadoPartida del usuario a null en la BD
+		await db.update(usuario).set({ EstadoPartida: null }).where(eq(usuario.id, idJugador)).run();
 
 		// Notificar al jugador
 		socket.emit('partidaCancelada', { mensaje: 'Búsqueda de partida cancelada' });
@@ -163,7 +176,28 @@ export async function joinExistingGame(socket, idJugador, gameId) {
 			return null;
 		}
 
-		// Actualizar BD: establecer Jugador2
+		// Primero, verificar que la partida sigue existiendo en memoria y en BD
+		const partidaMem = ActiveXObjects[gameId];
+		if (!partidaMem || partidaMem.estado !== 'esperando') {
+			console.warn('joinExistingGame: partida no disponible en memoria o ya no está en espera', gameId);
+			socket.emit('error', { message: 'La partida ya no está disponible' });
+			return null;
+		}
+
+		// Verificar en BD que Jugador2 aún es NULL (evitar races)
+		const partidaRow = await db.select().from(partidaCompetitiva).where(eq(partidaCompetitiva.id, gameId)).get();
+		if (!partidaRow) {
+			console.warn('joinExistingGame: partida no encontrada en BD', gameId);
+			socket.emit('error', { message: 'La partida ya no está disponible' });
+			return null;
+		}
+		if (partidaRow.Jugador2) {
+			console.warn('joinExistingGame: partida ya tiene Jugador2', gameId);
+			socket.emit('error', { message: 'La partida ya fue ocupada' });
+			return null;
+		}
+
+		// Todo OK: actualizar BD para establecer Jugador2
 		await db.update(partidaCompetitiva).set({ Jugador2: idJugador }).where(eq(partidaCompetitiva.id, gameId)).run();
 
 		// Actualizar el objeto en memoria
