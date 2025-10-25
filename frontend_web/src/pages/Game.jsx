@@ -21,6 +21,27 @@ export default function Game() {
   const [summary, setSummary] = useState(null)
 
   useEffect(() => {
+    // Helpers: hash string id to integer and seeded RNG (deterministic shuffle)
+    function hashStringToInt(s) {
+      if (!s) return 0
+      let h = 2166136261 >>> 0
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i)
+        h = Math.imul(h, 16777619) >>> 0
+      }
+      return h >>> 0
+    }
+
+    function seededRng(seed) {
+      // Mulberry32
+      let t = seed >>> 0
+      return function() {
+        t += 0x6D2B79F5
+        let r = Math.imul(t ^ (t >>> 15), 1 | t)
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61)
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+      }
+    }
     // If Menu stored a partidaLista in sessionStorage (navigation race), use it
     try {
       const raw = sessionStorage.getItem('partidaLista')
@@ -37,12 +58,14 @@ export default function Game() {
           ]
           // filter out missing or blank texts
           const present = rawOptions.filter(o => o && (o.text ?? '').toString().trim() !== '')
-          const seed = q.id || Math.floor(Math.random() * 1e9)
-          const shuffled = rawOptions.slice()
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.abs((seed + i) % (i + 1))
-            const tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp
-          }
+            const seed = (typeof q.id === 'number' ? q.id : hashStringToInt(String(q.id))) || Math.floor(Math.random() * 1e9)
+            // shuffle only the present (non-empty) options using seeded RNG
+            const shuffled = present.slice()
+            const rand = seededRng(seed)
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(rand() * (i + 1))
+              const tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp
+            }
           const options = shuffled.map(o => ({ text: (o && o.text) ? o.text.toString().trim() : '', isCorrect: !!(o && o.isCorrect) }))
           return { id: q.id, pregunta: q.pregunta || '', options }
         })
@@ -76,13 +99,14 @@ export default function Game() {
           q.respuesta_incorrecta2 ? { text: q.respuesta_incorrecta2, isCorrect: false } : null,
           q.respuesta_incorrecta3 ? { text: q.respuesta_incorrecta3, isCorrect: false } : null,
         ]
-        const present = rawOptions.filter(o => o && (o.text ?? '').toString().trim() !== '')
+  const present = rawOptions.filter(o => o && (o.text ?? '').toString().trim() !== '')
 
-        // deterministic shuffle using id when possible
-        const seed = q.id || Math.floor(Math.random() * 1e9)
-        const shuffled = rawOptions.slice()
+  // deterministic shuffle using id when possible; shuffle only present options
+        const seed = (typeof q.id === 'number' ? q.id : hashStringToInt(String(q.id))) || Math.floor(Math.random() * 1e9)
+        const shuffled = present.slice()
+        const rand = seededRng(seed)
         for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.abs((seed + i) % (i + 1))
+          const j = Math.floor(rand() * (i + 1))
           const tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp
         }
         const options = shuffled.map(o => ({ text: (o && o.text) ? o.text.toString().trim() : '', isCorrect: !!(o && o.isCorrect) }))
