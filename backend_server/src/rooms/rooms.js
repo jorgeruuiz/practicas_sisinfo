@@ -65,6 +65,46 @@ export async function findGame(socket, data) {
 	}
 }
 
+// Función para manejar la cancelación de la búsqueda de partida por parte de un usuario
+export async function cancelFindGame(socket, data) {
+	try {
+		const idJugador = data?.idJugador || null;
+
+		if (!idJugador) {
+			socket.emit('error', { message: 'Falta idJugador en data' });
+			return null;
+		}
+
+		// Actualizar estado de partida del usuario en BD a NULL
+		await db.update(usuario).set({ EstadoPartida: null }).where(eq(usuario.id, idJugador)).run();
+
+		// Localizar la partida pendiente en memoria y en BD y eliminarla
+		for (const [gameId, partida] of Object.entries(ActiveXObjects)) {
+			if (partida.players.includes(idJugador) && partida.estado === 'esperando') {
+				// Eliminar partida de la memoria
+				delete ActiveXObjects[gameId];
+
+				// Eliminar partida de la BD
+				await db.delete(partidaCompetitiva).where(eq(partidaCompetitiva.id, gameId)).run();
+
+				console.log(`Partida ${gameId} eliminada por jugador ${idJugador}`);
+				break;
+			}
+		}
+
+		// Notificar al jugador
+		socket.emit('partidaCancelada', { mensaje: 'Búsqueda de partida cancelada' });
+
+		console.log(`Búsqueda de partida cancelada por jugador ${idJugador}`);
+		return true;
+
+	} catch (error) {
+		console.error('Error en cancelFindGame:', error);
+		socket.emit('error', { message: 'Error interno al cancelar búsqueda de partida' });
+		return null;
+	}
+}
+
 // Función auxiliar para manejar la creación de una nueva partida competitiva
 export async function createNewGame(socket, idJugador) {
 	try {
@@ -150,8 +190,28 @@ export async function joinExistingGame(socket, idJugador, gameId) {
 			}
 		}
 
+		// Recuperar los nombres de usuario de los jugadores
+		const jugadoresInfo = new Map();
+		for (const pid of partida?.players || []) {
+			try {
+				const userRow = await db.select().from(usuario).where(eq(usuario.id, pid)).get();
+				if (userRow) {
+					jugadoresInfo.set(pid, userRow.NombreUser);
+				} else {
+					jugadoresInfo.set(pid, 'Desconocido');
+				}
+			}
+			catch (e) {
+				jugadoresInfo.set(pid, 'Desconocido');
+			}
+		}
+		// Guardar los nombres de usuario en el objeto partida (cada uno asociado a su id)
+		if (partida) {
+			partida.jugadoresInfo = jugadoresInfo;
+		}
+
 		// Notificar a ambos jugadores que la partida está lista
-		io.to(gameId).emit('partidaEncontrada', { partidaId: gameId, jugadores: partida?.players || [] });
+		io.to(gameId).emit('partidaEncontrada', { partidaId: gameId, jugadores: Array.from(jugadoresInfo.entries()).map(([id, NombreUser]) => ({ id, NombreUser })) });
 
         // Actualizar estado de ambos jugadores en BD
         for (const pid of partida?.players || []) {
@@ -326,6 +386,9 @@ export async function finalizeGame(partidaId) {
 		const idJ1 = players[0];
 		const idJ2 = players[1];
 
+		const nombreJ1 = partida.jugadoresInfo.get(idJ1) || 'Desconocido';
+		const nombreJ2 = partida.jugadoresInfo.get(idJ2) || 'Desconocido';
+
 		const aciertosJ1 = Number(partida.totalAciertos[idJ1] || 0);
 		const aciertosJ2 = Number(partida.totalAciertos[idJ2] || 0);
 
@@ -375,8 +438,8 @@ export async function finalizeGame(partidaId) {
 			partidaId,
 			totalPreguntas: partida.totalPreguntas || 0,
 			jugadores: [
-				{ id: idJ1, reportedAciertos: aciertosJ1, variacion: delta1, nuevaPuntuacion: score1 + delta1 },
-				{ id: idJ2, reportedAciertos: aciertosJ2, variacion: delta2, nuevaPuntuacion: score2 + delta2 }
+				{ id: idJ1, nombre: nombreJ1, reportedAciertos: aciertosJ1, variacion: delta1, nuevaPuntuacion: score1 + delta1 },
+				{ id: idJ2, nombre: nombreJ2, reportedAciertos: aciertosJ2, variacion: delta2, nuevaPuntuacion: score2 + delta2 }
 			],
 			ganador
 		};

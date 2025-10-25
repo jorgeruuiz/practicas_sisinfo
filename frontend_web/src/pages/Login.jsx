@@ -12,7 +12,7 @@ export default function Login() {
   async function doLogin() {
     if (!nombre || !clave) { setStatus('Rellena ambos campos'); return }
     setStatus('Logging...')
-    try {
+      try {
       const res = await fetch('http://localhost:3000/login', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ NombreUser: nombre, Contrasena: clave })
@@ -22,7 +22,7 @@ export default function Login() {
       saveAuth(j.accessToken, j.publicUser)
   // Create the socket connection once we've stored the token
   try { connectSocket() } catch (e) { console.warn('socket connect failed', e) }
-      nav('/game')
+      nav('/menu')
     } catch (err) { setStatus('Fetch error: ' + err.message) }
   }
 

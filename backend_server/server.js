@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
-import { findGame, receivePlayerResults } from './src/rooms/rooms.js';
+import { findGame, cancelFindGame, receivePlayerResults } from './src/rooms/rooms.js';
 import { createFriendRequest, acceptFriendRequestById, removeFriendByUsers } from './src/friendship/friends.js';
 import { db } from './src/db/db.js';
 import { amistad } from './src/db/schemas/schemas.js';
@@ -87,6 +87,16 @@ async function newConnection(socket) {
         }
     });
 
+    socket.on('cancelarBusqueda', async (data) => {
+        try {
+            const idJugador = data.idJugador;
+            cancelFindGame(socket, idJugador);
+        } catch (err) {
+            console.error('Error en handler cancelarBusqueda:', err);
+            socket.emit('error', { message: 'Error interno al procesar cancelarBusqueda' });
+        }
+    });
+    
     // ------------------------------------------------------------------------------------------
     // Eventos de amistad vía WebSocket
     // ------------------------------------------------------------------------------------------
