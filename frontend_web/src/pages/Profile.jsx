@@ -7,10 +7,12 @@ import {
   clearAuth,
 } from "../app";
 import { disconnect as disconnectSocket } from "../lib/socketClient";
+import { useNavigate } from 'react-router-dom'
 
 export default function Profile() {
   requireAuthOrRedirect();
   const me = getPublicUser();
+  const nav = useNavigate()
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
   const [nombre, setNombre] = useState(me?.NombreUser || "");
@@ -71,9 +73,12 @@ export default function Profile() {
     <div className="p-6 max-w-lg mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl">Perfil</h1>
-        <button className="btn" onClick={logout}>
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="btn" onClick={() => nav('/friends')}>Friends</button>
+          <button className="btn" onClick={logout}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="card p-4 space-y-3">

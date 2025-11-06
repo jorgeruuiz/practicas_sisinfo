@@ -1,16 +1,4 @@
-CINE: 
-2.	¿En qué año se estrenó la primera película de "Star Wars"?
-○	A) 1977
-○	B) 1980
-○	C) 1985
-○	D) 1975
-Respuesta correcta: A) 1977
-3.	¿Qué actriz interpretó a Hermione Granger en las películas de Harry Potter?
-○	A) Emma Stone
-○	B) Emma Watson
-○	C) Natalie Portman
-○	D) Keira Knightley
-Respuesta correcta: B) Emma Watson
+
 4.	¿Qué película ganó el Óscar a Mejor Película en 2020?
 ○	A) Joker
 ○	B) 1917

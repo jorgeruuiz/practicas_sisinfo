@@ -391,7 +391,7 @@ export default function Game() {
 
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto w-full max-w-full sm:max-w-3xl px-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -410,7 +410,7 @@ export default function Game() {
               <CardContent className="space-y-4">
                 {Header}
 
-                <div className="p-5 border rounded-xl text-lg min-h-[6rem]">
+                <div className="p-4 sm:p-5 border rounded-xl text-base sm:text-lg min-h-[6rem] break-words">
                   {q.pregunta}
                 </div>
 
@@ -441,7 +441,7 @@ export default function Game() {
                             className={base}
                             onClick={() => selectOption(i)}
                           >
-                            <div className="text-base">{text}</div>
+                            <div className="text-sm sm:text-base break-words">{text}</div>
                           </motion.div>
                         );
                       })}

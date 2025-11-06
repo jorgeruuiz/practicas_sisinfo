@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { requireAuthOrRedirect, getPublicUser } from "../app";
 import { useSocket } from "../lib/SocketProvider";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from 'react-router-dom'
 
 // UI (shadcn/ui)
 import {
@@ -64,10 +65,8 @@ export default function Friends() {
   const [knownFriends, setKnownFriends] = useState([]); // amigos desde BD
   const [targetToAdd, setTargetToAdd] = useState("");
   const [targetToRemove, setTargetToRemove] = useState("");
-  const [log, setLog] = useState([]);
   const [busy, setBusy] = useState(false);
-  const logRef = useRef(null);
-
+  const nav = useNavigate()
   const initials = useMemo(
     () =>
       (me?.NombreUser || "User")
@@ -90,69 +89,58 @@ export default function Friends() {
     </Badge>
   );
 
-  const addLog = (line) =>
-    setLog((p) => [...p, `[${new Date().toLocaleTimeString()}] ${line}`]);
-
-  useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [log]);
-
   // ------------------------ EVENTOS SOCKET ------------------------
   useEffect(() => {
     if (!socket) return;
 
     const onConnect = () => {
       setConnected(true);
-      addLog("🔌 conectado");
+      console.debug("🔌 conectado");
       socket.emit("friend:list");
       socket.emit("friend:list:pending");
     };
 
     const onDisconnect = () => {
       setConnected(false);
-      addLog("🔌 desconectado");
+      console.debug("🔌 desconectado");
     };
     const onAuthOk = () => {
       setConnected(true);
-      addLog("✅ autenticado correctamente");
+      console.debug("✅ autenticado correctamente");
       socket.emit("friend:list");
       socket.emit("friend:list:pending");
     };
 
     const onIncoming = (d) => {
-      addLog(`📥 friend:incoming ${d?.id || ""}`);
       if (d?.id) setIncoming((prev) => [...prev, d]);
     };
     const onAccepted = (d) => {
-      addLog(`✅ friend:accepted ${JSON.stringify(d)}`);
+      console.debug('friend:accepted', d)
       socket.emit("friend:list");
     };
     const onAcceptOk = (d) => {
-      addLog(`🤝 friend:accept:ok ${JSON.stringify(d)}`);
+      console.debug('friend:accept:ok', d)
       socket.emit("friend:list");
     };
     const onRemoved = (d) => {
-      addLog(`🧹 friend:removed ${JSON.stringify(d)}`);
+      console.debug('friend:removed', d)
       socket.emit("friend:list");
     };
 
-    const onReqOk = (d) => addLog(`📨 friend:request:ok ${d?.id || ""}`);
-    const onRemOk = (d) => addLog(`🧹 friend:remove:ok ${JSON.stringify(d)}`);
-    const onError = (d) =>
-      addLog(
-        `❌ friend:error ${typeof d === "string" ? d : JSON.stringify(d)}`
-      );
+    const onReqOk = (d) => console.debug('friend:request:ok', d)
+    const onRemOk = (d) => console.debug('friend:remove:ok', d)
+    const onError = (d) => console.debug('friend:error', d)
 
     const onList = (arr) => {
-      addLog(`📜 friend:list:ok (${arr.length} amigos)`);
+      console.debug('friend:list:ok', arr.length)
       setKnownFriends(arr.map((u) => ({ id: u.id, nombre: u.NombreUser })));
     };
     const onPending = (rows) => {
-      addLog(`🕒 friend:list:pending:ok (${rows.length} solicitudes)`);
+      console.debug('friend:list:pending:ok', rows.length)
       setIncoming(rows);
     };
     const onRefresh = () => {
-      addLog("🔁 friend:list:refresh");
+      console.debug('friend:list:refresh')
       socket.emit("friend:list");
     };
 
@@ -201,14 +189,12 @@ export default function Friends() {
     try {
       const user = await fetchUserByName(targetToAdd.trim());
       socket.emit("friend:request", { fromId: me.id, toId: user.id });
-      addLog(
-        `➡️ emit friend:request from=${me.id} to=${user.id} (${user.NombreUser})`
-      );
+      console.debug('emit friend:request', { from: me.id, to: user.id })
       setStatus("Solicitud enviada ✅");
       setTargetToAdd("");
     } catch (e) {
       setStatus("Error: " + e.message);
-      addLog(`❌ request error: ${e.message}`);
+      console.debug(`❌ request error: ${e.message}`);
     } finally {
       setBusy(false);
     }
@@ -218,7 +204,7 @@ export default function Friends() {
     const r = incoming[idx];
     if (!r) return;
     socket.emit("friend:accept", { requestId: r.id, accepterId: me.id });
-    addLog(`➡️ emit friend:accept requestId=${r.id} accepter=${me.id}`);
+    console.debug('emit friend:accept', { requestId: r.id, accepterId: me.id })
     setIncoming((list) => list.filter((_, i) => i !== idx));
   }
 
@@ -229,14 +215,12 @@ export default function Friends() {
     try {
       const user = await fetchUserByName(targetToRemove.trim());
       socket.emit("friend:remove", { userA: me.id, userB: user.id });
-      addLog(
-        `➡️ emit friend:remove A=${me.id} B=${user.id} (${user.NombreUser})`
-      );
+      console.debug('emit friend:remove', { A: me.id, B: user.id })
       setStatus("Amistad eliminada ✅");
       setTargetToRemove("");
     } catch (e) {
       setStatus("Error: " + e.message);
-      addLog(`❌ remove error: ${e.message}`);
+      console.debug(`❌ remove error: ${e.message}`);
     } finally {
       setBusy(false);
     }
@@ -291,7 +275,8 @@ export default function Friends() {
                       {knownFriends.map((f) => (
                         <div
                           key={f.id}
-                          className="flex items-center justify-between p-2 border rounded-lg"
+                          onClick={() => nav(`/chat?userId=${f.id}`)}
+                          className="flex items-center justify-between p-2 border rounded-lg cursor-pointer hover:bg-muted/30"
                         >
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -303,6 +288,7 @@ export default function Friends() {
                               {f.nombre || f.NombreUser || f.id}
                             </div>
                           </div>
+                          <div className="text-xs text-muted-foreground">Chat →</div>
                         </div>
                       ))}
                     </div>
@@ -423,18 +409,7 @@ export default function Friends() {
                 </AnimatePresence>
               </div>
 
-              {/* Log */}
-              <div className="md:col-span-2">
-                <Label className="mb-2 block">Log</Label>
-                <div
-                  ref={logRef}
-                  className="rounded-xl border bg-muted/30 h-48 overflow-auto p-3 text-xs"
-                >
-                  {log.map((l, i) => (
-                    <div key={i}>{l}</div>
-                  ))}
-                </div>
-              </div>
+              {/* Log (removed) */}
             </CardContent>
           </Card>
         </motion.div>

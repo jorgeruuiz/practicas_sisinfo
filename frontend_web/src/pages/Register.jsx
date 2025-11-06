@@ -28,6 +28,7 @@ export default function Register() {
   const [clave, setClave] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const nav = useNavigate();
 
   async function doRegister() {
@@ -69,7 +70,8 @@ export default function Register() {
       }
 
       setStatus("Cuenta creada ✅. Revisa tu correo para verificar la cuenta.");
-      nav("/login");
+      // Show modal so user sees verification instructions before navigating
+      setShowVerifyModal(true);
     } catch (e) {
       setStatus("Fetch error: " + e.message);
     } finally {
@@ -174,6 +176,27 @@ export default function Register() {
           </CardFooter>
         </Card>
       </motion.div>
+      {/* Verification modal shown after successful registration */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="relative w-full max-w-md mx-4"
+          >
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold mb-2">Registro casi listo</h3>
+              <p className="mb-4">Gracias por registrarte — para terminar el proceso, por favor verifica tu correo electrónico (<strong>{correo}</strong>). Revisa la bandeja de entrada y la carpeta de spam.</p>
+              <div className="flex justify-end gap-2">
+                <button className="btn-outline" onClick={() => { setShowVerifyModal(false); nav('/login'); }}>Ir a Login</button>
+                <button className="btn" onClick={() => setShowVerifyModal(false)}>Cerrar</button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

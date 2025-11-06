@@ -41,7 +41,6 @@ export default function Menu() {
   const nav = useNavigate();
   const socket = useSocket();
   const publicUser = getPublicUser();
-
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState("");
 

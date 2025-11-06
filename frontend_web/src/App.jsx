@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Menu from "./pages/Menu";
 import Game from "./pages/Game";
@@ -8,10 +8,17 @@ import Register from "./pages/Register";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Friends from "./pages/Friends";
+import Header from "./components/Header";
 
 export default function App() {
+  const location = useLocation();
+  const hideHeader = ["/login", "/register", "/game"].includes(location.pathname);
+
   return (
-    <Routes>
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {!hideHeader && <Header />}
+        <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
@@ -24,6 +31,8 @@ export default function App() {
 
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        </Routes>
+      </div>
+    </div>
   );
 }
