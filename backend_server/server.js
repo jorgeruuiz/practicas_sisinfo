@@ -16,6 +16,7 @@ import {
 } from "./src/friendship/friends.js";
 import { db } from "./src/db/db.js";
 import { usuario, amistad } from "./src/db/schemas/schemas.js";
+import { initNotifier } from './src/notifications/notifications.js';
 import { eq, or, and, inArray } from "drizzle-orm";
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -316,6 +317,9 @@ async function newConnection(socket) {
 setInterval(() => {
   io.emit("ping", { message: "Ping!" });
 }, 5000);
+
+// Initialize notifications (simple encapsulated notifier)
+initNotifier({ activeSockets, db, usuario });
 
 // Escuchar eventos de conexión al servidor
 io.on("connection", newConnection);

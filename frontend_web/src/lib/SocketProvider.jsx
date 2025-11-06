@@ -15,7 +15,7 @@ import {
 const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(() => Boolean(getSocket()?.connected));
   const socketRef = useRef(null);
   const listenersAttached = useRef(false);
   // Do not auto-connect on mount. Connection is created explicitly after login

@@ -2,6 +2,7 @@ import { db } from '../db/db.js';
 import { mensajes, usuario, amistad } from '../db/schemas/schemas.js';
 import { eq, or, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { notifier } from '../notifications/notifications.js';
 
 // POST /chat/sendMessage
 export async function sendMessage(req, res) {
@@ -26,6 +27,12 @@ export async function sendMessage(req, res) {
     const id = uuidv4();
     await db.insert(mensajes).values({ id, fromId, toId, texto, leido: 0 });
     const inserted = { id, fromId, toId, texto };
+    // Emit internal notification so notifier can forward to connected sockets
+    try {
+      notifier.emit('message:sent', { id, fromId, toId, texto });
+    } catch (e) {
+      console.error('notifier.emit error', e);
+    }
     return res.status(201).json({ ok: true, message: inserted });
   } catch (err) {
     console.error('sendMessage error', err);

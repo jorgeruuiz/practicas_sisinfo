@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { requireAuthOrRedirect, getPublicUser } from "../app";
 import { useSocket } from "../lib/SocketProvider";
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 
 const BASE = 'http://localhost:3000'
 
@@ -12,16 +12,21 @@ export default function Chat() {
   const socket = useSocket();
 
   const [searchParams] = useSearchParams()
-  const preUser = searchParams.get('userId') || ''
+  const location = useLocation()
+  const state = (location && location.state) || {}
+  const preUser = state.userId || searchParams.get('userId') || ''
+  const preUserName = state.userName || ''
 
   const [room, setRoom] = useState("global"); // sala "global" por defecto
-  const [toUserId, setToUserId] = useState(preUser); // para mensajes directos
+  const [toUserId, setToUserId] = useState(preUser); // para mensajes directos (internal)
+  const [toUserName, setToUserName] = useState(preUserName);
   const [msg, setMsg] = useState("");
   const [log, setLog] = useState([]); // {from, text, room?, to?}
   const [threadLoading, setThreadLoading] = useState(false)
   const listRef = useRef(null);
+  const nameCache = useRef({}); // cache id -> NombreUser to avoid repeated lookups
 
-  const isDirect = Boolean(preUser);
+  const isDirect = Boolean(toUserId);
 
   // autoscroll
   useEffect(() => {
@@ -40,7 +45,36 @@ export default function Chat() {
         const j = await res.json()
         if (j?.messages) {
           // normalize to common shape: { from: {id,nombre?}, text }
-          const rows = j.messages.map(m => ({ from: { id: m.fromId }, text: m.texto, id: m.id }))
+          const msgs = j.messages;
+          // collect unique author ids we need to resolve
+          const ids = Array.from(new Set(msgs.map(m => m.fromId).filter(x => x !== undefined && x !== null && String(x).trim() !== '')));
+          const idToName = {};
+          // try cache first
+          ids.forEach(id => { if (nameCache.current[id]) idToName[id] = nameCache.current[id]; });
+          // resolve those not in cache using batch endpoint
+          const toResolve = ids.filter(id => !idToName[id]);
+          if (toResolve.length > 0) {
+            try {
+              const q = toResolve.map(encodeURIComponent).join(',');
+              const r = await fetch(`${BASE}/user/byIds?ids=${q}`);
+              if (r.ok) {
+                const j = await r.json().catch(() => null);
+                if (j && Array.isArray(j.users)) {
+                  j.users.forEach(u => {
+                    if (u && u.id) {
+                      idToName[u.id] = u.NombreUser || null;
+                      nameCache.current[u.id] = u.NombreUser || null;
+                    }
+                  });
+                }
+              }
+            } catch (e) { /* ignore batch lookup errors */ }
+          }
+
+          // Ensure current user's name is available
+          if (me?.id && me?.NombreUser) idToName[me.id] = me.NombreUser;
+
+          const rows = msgs.map(m => ({ from: { id: m.fromId, nombre: idToName[m.fromId] || null }, text: m.texto, id: m.id }))
           setLog(rows)
         }
       } catch (e) {
@@ -49,8 +83,22 @@ export default function Chat() {
         setThreadLoading(false)
       }
     }
-    if (preUser) loadThreadFor(preUser)
-  }, [preUser, me.id])
+    if (toUserId) loadThreadFor(toUserId)
+  }, [toUserId, me.id])
+
+  // If we don't have the recipient name from navigation state, try to resolve it once
+  useEffect(() => {
+    async function resolveRecipient() {
+      if (!toUserId || toUserName) return;
+      try {
+        const r = await fetch(`${BASE}/user/byId?id=${encodeURIComponent(toUserId)}`);
+        if (!r.ok) return;
+        const u = await r.json().catch(() => null);
+        if (u && u.NombreUser) setToUserName(u.NombreUser);
+      } catch (e) { /* ignore */ }
+    }
+    resolveRecipient();
+  }, [toUserId, toUserName]);
 
   useEffect(() => {
     if (!socket) return;
@@ -131,7 +179,7 @@ export default function Chat() {
         ) : (
           <div className="mb-2">
             <div className="text-sm text-muted-foreground">
-              Chat directo con ID: <strong>{toUserId}</strong>
+              Chat directo con: <strong>{toUserName || toUserId}</strong>
             </div>
           </div>
         )}
@@ -162,7 +210,7 @@ export default function Chat() {
               onChange={(e) => setToUserId(e.target.value)}
               disabled={isDirect}
             />
-            <button className="btn" onClick={sendDirect} disabled={!toUserId.trim()}>
+            <button className="btn" onClick={sendDirect} disabled={!toUserId || String(toUserId).trim() === ''}>
               Enviar DM
             </button>
           </div>

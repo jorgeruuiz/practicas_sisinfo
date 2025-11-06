@@ -16,7 +16,7 @@ import {
     listMessagesBetween,
     deleteMessage
 } from './src/chat/chat.js';
-import { getUserByNombreUser } from './src/db/db_requests/db_requests.js';
+import { getUserByNombreUser, getUserById, getUsersByIds } from './src/db/db_requests/db_requests.js';
 
 export const app = express()
 
@@ -98,6 +98,35 @@ app.get('/user/byName', async (req, res) => {
         return res.status(200).json({ id: u.id, NombreUser: u.NombreUser, Puntuacion: u.Puntuacion });
     } catch (err) {
         console.error('GET /user/byName error', err);
+        return res.status(500).json({ error: 'Internal error' });
+    }
+});
+
+// Lookup user by id (single)
+app.get('/user/byId', async (req, res) => {
+    try {
+        const id = req.query.id;
+        if (!id) return res.status(400).json({ error: 'Missing id query' });
+        const u = await getUserById(id);
+        if (!u) return res.status(404).json({ error: 'User not found' });
+        return res.status(200).json({ id: u.id, NombreUser: u.NombreUser, Puntuacion: u.Puntuacion });
+    } catch (err) {
+        console.error('GET /user/byId error', err);
+        return res.status(500).json({ error: 'Internal error' });
+    }
+});
+
+// Lookup multiple users by comma-separated ids: /user/byIds?ids=1,2,3
+app.get('/user/byIds', async (req, res) => {
+    try {
+        const raw = req.query.ids || '';
+        const ids = raw.split(',').map(s => String(s || '').trim()).filter(Boolean);
+        if (ids.length === 0) return res.status(400).json({ error: 'Missing ids query' });
+        const rows = await getUsersByIds(ids);
+        const users = (rows || []).map(u => ({ id: u.id, NombreUser: u.NombreUser, Puntuacion: u.Puntuacion }));
+        return res.status(200).json({ users });
+    } catch (err) {
+        console.error('GET /user/byIds error', err);
         return res.status(500).json({ error: 'Internal error' });
     }
 });
