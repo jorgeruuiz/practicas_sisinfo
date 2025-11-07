@@ -269,7 +269,7 @@ export default function Menu() {
                     onClick={() => nav("/profile")}
                     aria-label="Ir a perfil"
                   >
-                    <User className="mr-2 h-5 w-5" /> Perfil (pendiente)
+                    <User className="mr-2 h-5 w-5" /> Perfil
                   </Button>
                   <Button
                     variant="outline"
@@ -278,7 +278,6 @@ export default function Menu() {
                     aria-label="Ir a entrenamiento"
                   >
                     <Dumbbell className="mr-2 h-5 w-5" /> Entrenamiento
-                    (pendiente)
                   </Button>
                 </div>
               </div>

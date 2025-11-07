@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Friends from "./pages/Friends";
+import Training from "./pages/Training";
 import Header from "./components/Header";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/game" element={<Game />} />
 
       <Route path="/chat" element={<Chat />} />
+  <Route path="/training" element={<Training />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/friends" element={<Friends />} />
 

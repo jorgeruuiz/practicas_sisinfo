@@ -16,7 +16,7 @@ import {
     listMessagesBetween,
     deleteMessage
 } from './src/chat/chat.js';
-import { getUserByNombreUser, getUserById, getUsersByIds } from './src/db/db_requests/db_requests.js';
+import { getUserByNombreUser, getUserById, getUsersByIds, getQuestionsByTopic } from './src/db/db_requests/db_requests.js';
 
 export const app = express()
 
@@ -109,7 +109,17 @@ app.get('/user/byId', async (req, res) => {
         if (!id) return res.status(400).json({ error: 'Missing id query' });
         const u = await getUserById(id);
         if (!u) return res.status(404).json({ error: 'User not found' });
-        return res.status(200).json({ id: u.id, NombreUser: u.NombreUser, Puntuacion: u.Puntuacion });
+        return res.status(200).json({
+            id: u.id,
+            NombreUser: u.NombreUser,
+            Puntuacion: u.Puntuacion,
+            totalGames: u.totalGames || 0,
+            totalWins: u.totalWins || 0,
+            totalLosses: u.totalLosses || 0,
+            totalDraws: u.totalDraws || 0,
+            actualStreak: u.actualStreak || 0,
+            maxStreak: u.maxStreak || 0
+        });
     } catch (err) {
         console.error('GET /user/byId error', err);
         return res.status(500).json({ error: 'Internal error' });
@@ -127,6 +137,31 @@ app.get('/user/byIds', async (req, res) => {
         return res.status(200).json({ users });
     } catch (err) {
         console.error('GET /user/byIds error', err);
+        return res.status(500).json({ error: 'Internal error' });
+    }
+});
+
+// Obtener preguntas por tematica: /questions/byTopic?topic=Historia&limit=10
+app.get('/questions/byTopic', async (req, res) => {
+    try {
+        const topic = req.query.topic;
+        const limit = parseInt(req.query.limit || '10', 10) || 10;
+        if (!topic) return res.status(400).json({ error: 'Missing topic query' });
+        const rows = await getQuestionsByTopic(topic, limit);
+        // map to a clean shape
+        const questions = (rows || []).map(q => ({
+            id: q.id,
+            pregunta: q.pregunta,
+            respuesta_correcta: q.respuesta_correcta,
+            respuesta_incorrecta1: q.respuesta_incorrecta1,
+            respuesta_incorrecta2: q.respuesta_incorrecta2,
+            respuesta_incorrecta3: q.respuesta_incorrecta3,
+            tematica: q.tematica,
+            dificultad: q.dificultad
+        }));
+        return res.status(200).json({ questions });
+    } catch (err) {
+        console.error('GET /questions/byTopic error', err);
         return res.status(500).json({ error: 'Internal error' });
     }
 });

@@ -16,7 +16,6 @@ export async function getUserByNombreUser(name) {
 	if (rows.length === 0) return null;
 	return rows[0];
 }
-// ------------------------------------------------------------------------------------------------
 
 // Obtener usuario por id
 export async function getUserById(id) {
@@ -32,3 +31,17 @@ export async function getUsersByIds(ids) {
 	const rows = await db.select().from(usuario).where(inArray(usuario.id, ids));
 	return rows || [];
 }
+
+// Obtener hasta `limit` preguntas de una tematica concreta
+export async function getQuestionsByTopic(topic, limit = 10) {
+	if (!topic) throw new Error('Missing topic');
+	
+	// Use a random order so training sessions are varied
+	const rows = await db.select()
+		.from(preguntas)
+		.where(eq(preguntas.tematica, topic))
+		.orderBy(sql`RANDOM()`).limit(limit);
+	return rows || [];
+}
+
+// ------------------------------------------------------------------------------------------------

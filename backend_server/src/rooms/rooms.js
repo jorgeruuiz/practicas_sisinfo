@@ -467,6 +467,85 @@ export async function finalizeGame(partidaId) {
 			await db.update(usuario).set({ Puntuacion: score2 + delta2, EstadoPartida: null }).where(eq(usuario.id, idJ2)).run();
 		} catch (e) { console.warn('finalizeGame: error actualizando usuario2', e?.message || e); }
 
+		// Además de la puntuación, actualizar estadísticas de usuarios: totalGames, wins/losses/draws, racha actual y racha máxima
+		try {
+			// Valores previos
+			const u1_games = Number(user1?.totalGames ?? 0);
+			const u1_wins = Number(user1?.totalWins ?? 0);
+			const u1_losses = Number(user1?.totalLosses ?? 0);
+			const u1_draws = Number(user1?.totalDraws ?? 0);
+			let u1_streak = Number(user1?.actualStreak ?? 0);
+			let u1_max = Number(user1?.maxStreak ?? 0);
+
+			const u2_games = Number(user2?.totalGames ?? 0);
+			const u2_wins = Number(user2?.totalWins ?? 0);
+			const u2_losses = Number(user2?.totalLosses ?? 0);
+			const u2_draws = Number(user2?.totalDraws ?? 0);
+			let u2_streak = Number(user2?.actualStreak ?? 0);
+			let u2_max = Number(user2?.maxStreak ?? 0);
+
+			// Update counters depending on result
+			const isDraw = ganador === null;
+			// Player1
+			let new_u1_games = u1_games + 1;
+			let new_u1_wins = u1_wins;
+			let new_u1_losses = u1_losses;
+			let new_u1_draws = u1_draws;
+			let new_u1_streak = u1_streak;
+			let new_u1_max = u1_max;
+			if (isDraw) {
+				new_u1_draws = u1_draws + 1;
+				new_u1_streak = 0;
+			} else if (ganador === idJ1) {
+				new_u1_wins = u1_wins + 1;
+				new_u1_streak = u1_streak + 1;
+				if (new_u1_streak > new_u1_max) new_u1_max = new_u1_streak;
+			} else {
+				new_u1_losses = u1_losses + 1;
+				new_u1_streak = 0;
+			}
+
+			// Player2
+			let new_u2_games = u2_games + 1;
+			let new_u2_wins = u2_wins;
+			let new_u2_losses = u2_losses;
+			let new_u2_draws = u2_draws;
+			let new_u2_streak = u2_streak;
+			let new_u2_max = u2_max;
+			if (isDraw) {
+				new_u2_draws = u2_draws + 1;
+				new_u2_streak = 0;
+			} else if (ganador === idJ2) {
+				new_u2_wins = u2_wins + 1;
+				new_u2_streak = u2_streak + 1;
+				if (new_u2_streak > new_u2_max) new_u2_max = new_u2_streak;
+			} else {
+				new_u2_losses = u2_losses + 1;
+				new_u2_streak = 0;
+			}
+
+			// Persistir cambios en la BD (añadir a la puntuación ya actualizada)
+			await db.update(usuario).set({
+				totalGames: new_u1_games,
+				totalWins: new_u1_wins,
+				totalLosses: new_u1_losses,
+				totalDraws: new_u1_draws,
+				actualStreak: new_u1_streak,
+				maxStreak: new_u1_max
+			}).where(eq(usuario.id, idJ1)).run();
+
+			await db.update(usuario).set({
+				totalGames: new_u2_games,
+				totalWins: new_u2_wins,
+				totalLosses: new_u2_losses,
+				totalDraws: new_u2_draws,
+				actualStreak: new_u2_streak,
+				maxStreak: new_u2_max
+			}).where(eq(usuario.id, idJ2)).run();
+		} catch (e) {
+			console.warn('finalizeGame: error actualizando estadísticas de usuario', e?.message || e);
+		}
+
 		// Emitir evento de finalización con resumen
 		const summary = {
 			partidaId,

@@ -22,15 +22,36 @@ export default function Profile() {
     // opcional: cargar más info del perfil
     (async () => {
       try {
-        const res = await fetch("http://localhost:3000/me", {
-          credentials: "omit",
-        });
+        const res = await fetch(`http://localhost:3000/user/byId?id=${encodeURIComponent(me?.id)}`);
+        const j = await res.json().catch(() => null);
+        if (res.ok && j) {
+          // store stats in state
+          setStats({
+            Puntuacion: j.Puntuacion,
+            totalGames: j.totalGames,
+            totalWins: j.totalWins,
+            totalLosses: j.totalLosses,
+            totalDraws: j.totalDraws,
+            actualStreak: j.actualStreak,
+            maxStreak: j.maxStreak
+          });
+        }
         // si tu backend requiere token en header, añade Authorization.
         // este ejemplo confía en que el socket o el token se gestiona en fetch interceptor (si tienes).
       } catch {}
       setLoading(false);
     })();
   }, []);
+
+  const [stats, setStats] = useState({
+    Puntuacion: me?.Puntuacion ?? 0,
+    totalGames: me?.totalGames ?? 0,
+    totalWins: me?.totalWins ?? 0,
+    totalLosses: me?.totalLosses ?? 0,
+    totalDraws: me?.totalDraws ?? 0,
+    actualStreak: me?.actualStreak ?? 0,
+    maxStreak: me?.maxStreak ?? 0,
+  });
 
   async function updateProfile() {
     setStatus("Guardando...");
@@ -108,12 +129,15 @@ export default function Profile() {
       </div>
 
       <div className="card p-4 mt-4">
-        <div className="text-sm text-gray-600 mb-2">Datos actuales</div>
-        <div>
-          <strong>ID:</strong> {me?.id}
-        </div>
-        <div>
-          <strong>Usuario:</strong> {me?.NombreUser}
+        <div className="text-sm text-gray-600 mb-2">Estadísticas</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><strong>Puntuación:</strong> {stats.Puntuacion}</div>
+          <div><strong>Partidas:</strong> {stats.totalGames}</div>
+          <div><strong>Victorias:</strong> {stats.totalWins}</div>
+          <div><strong>Derrotas:</strong> {stats.totalLosses}</div>
+          <div><strong>Empates:</strong> {stats.totalDraws}</div>
+          <div><strong>Racha actual:</strong> {stats.actualStreak}</div>
+          <div><strong>Racha máxima:</strong> {stats.maxStreak}</div>
         </div>
       </div>
     </div>
