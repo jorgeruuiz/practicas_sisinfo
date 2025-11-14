@@ -80,7 +80,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+    <div className="min-h-screen grid place-items-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

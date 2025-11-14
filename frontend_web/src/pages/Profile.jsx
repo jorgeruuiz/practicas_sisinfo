@@ -6,6 +6,8 @@ import {
   saveAuth,
   clearAuth,
 } from "../app";
+// UI
+import { Button } from "@/components/ui/button";
 import { disconnect as disconnectSocket } from "../lib/socketClient";
 import { useNavigate } from 'react-router-dom'
 
@@ -122,9 +124,9 @@ export default function Profile() {
             onChange={(e) => setClave(e.target.value)}
           />
         </div>
-        <button className="btn-primary" onClick={updateProfile}>
+        <Button className="h-11 rounded-xl" onClick={updateProfile}>
           Guardar cambios
-        </button>
+        </Button>
         <pre className="text-sm">{status}</pre>
       </div>
 

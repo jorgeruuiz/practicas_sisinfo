@@ -16,7 +16,12 @@ export default function App() {
   const hideHeader = ["/login", "/register", "/game"].includes(location.pathname);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Fondo radial global fijo (visible en todas las rutas) */}
+      <div
+        className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)]"
+        aria-hidden="true"
+      />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {!hideHeader && <Header />}
         <Routes>

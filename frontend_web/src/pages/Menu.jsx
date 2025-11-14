@@ -155,7 +155,7 @@ export default function Menu() {
   }, [searching]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.15),transparent_50%),radial-gradient(circle_at_80%_50%,rgba(147,51,234,0.15),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.2),transparent_45%),radial-gradient(circle_at_80%_50%,rgba(147,51,234,0.25),transparent_50%)]">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}

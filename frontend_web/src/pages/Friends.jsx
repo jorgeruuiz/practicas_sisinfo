@@ -227,7 +227,7 @@ export default function Friends() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+    <div className="min-h-screen p-4">
       <div className="mx-auto max-w-4xl">
         <motion.div
           initial={{ opacity: 0, y: 12 }}

@@ -277,7 +277,7 @@ export default function Game() {
   // --- Status: loading ---
   if (status === "loading") {
     return (
-      <div className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+      <div className="min-h-screen grid place-items-center p-4">
         <Card className="w-full max-w-3xl border border-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function Game() {
   // --- Status: waitingForOpponent ---
   if (status === "waitingForOpponent") {
     return (
-      <div className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+      <div className="min-h-screen grid place-items-center p-4">
         <Card className="w-full max-w-xl border border-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function Game() {
   // --- Status: finished ---
   if (status === "finished" && summary) {
     return (
-      <div className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+      <div className="min-h-screen grid place-items-center p-4">
         <Card className="w-full max-w-3xl border border-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -390,7 +390,7 @@ export default function Game() {
     const isRevealed = !!revealed[current];
 
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+      <div className="min-h-screen p-4">
         <div className="mx-auto w-full max-w-full sm:max-w-3xl px-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -498,7 +498,7 @@ export default function Game() {
 
   // --- Default fallback ---
   return (
-    <div className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.12),transparent_50%),radial-gradient(circle_at_75%_60%,rgba(147,51,234,0.12),transparent_55%)] p-4">
+    <div className="min-h-screen grid place-items-center p-4">
       <Card className="w-full max-w-xl border border-border/60 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg rounded-2xl">
         <CardHeader>
           <CardTitle>Esperando partida...</CardTitle>
