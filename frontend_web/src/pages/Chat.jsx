@@ -184,8 +184,8 @@ export default function Chat() {
           </div>
         )}
 
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div className="md:col-span-2 flex gap-2">
+        <div className="mt-3">
+          <div className="flex gap-2">
             <input
               className="flex-1 p-2 border rounded"
               placeholder={isDirect ? "Escribe un mensaje directo…" : "Escribe un mensaje para la sala…"}
@@ -199,19 +199,7 @@ export default function Chat() {
               }}
             />
             <button className="btn-primary" onClick={() => (isDirect ? sendDirect() : sendToRoom())}>
-              {isDirect ? "Enviar" : "Enviar sala"}
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 p-2 border rounded"
-              placeholder="ID de usuario (DM)"
-              value={toUserId}
-              onChange={(e) => setToUserId(e.target.value)}
-              disabled={isDirect}
-            />
-            <button className="btn" onClick={sendDirect} disabled={!toUserId || String(toUserId).trim() === ''}>
-              Enviar DM
+              Enviar
             </button>
           </div>
         </div>
