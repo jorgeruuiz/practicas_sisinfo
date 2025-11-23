@@ -4,7 +4,7 @@ import { requireAuthOrRedirect, getPublicUser } from "../app";
 import { useSocket } from "../lib/SocketProvider";
 import { useSearchParams, useLocation } from 'react-router-dom'
 
-const BASE = 'http://localhost:3000'
+const BASE = 'http://localhost:8080'
 
 export default function Chat() {
   requireAuthOrRedirect();

@@ -1,0 +1,45 @@
+==============================================
+
+GUÍA DE DESPLIEGUE DOCKER 
+
+==============================================
+
+Hay que tener instalado Docker Desktop en el ordenador
+
+1. PREPARACIÓN
+
+Compilar el Frontend (Necesario si hay cambios):
+
+npm run build
+
+
+Verificar Configuración de Puerto:
+Asegurar que PORT=8080 en el archivo .env.
+
+2. DESPLIEGUE
+
+Detener y Limpiar el Contenedor Antiguo (si ya se habia ejecutado antes):
+
+docker stop sisinf-node
+docker rm sisinf-node
+
+
+Ejecutar el Script de Despliegue:
+
+bash ./deploy.sh
+
+
+3. VERIFICACIÓN
+
+Comprobar que el Contenedor está Activo:
+
+docker ps
+
+
+Verificar Logs del Servidor (Buscar puerto 8080):
+
+docker logs sisinf-node
+
+
+Acceder a la Aplicación:
+Abrir el navegador en http://localhost:8080.

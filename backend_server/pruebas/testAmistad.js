@@ -4,7 +4,7 @@ import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 
 async function loginUser(nombre, contrasena) {
-  const res = await fetch('http://localhost:3000/login', {
+  const res = await fetch('http://localhost:8080/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ NombreUser: nombre, Contrasena: contrasena })
@@ -50,7 +50,7 @@ async function interactiveClient() {
     const { accessToken, publicUser } = await loginUser(nombre, pass);
     console.log('Logueado:', publicUser.id, publicUser.NombreUser);
 
-    const socket = io(`http://localhost:3000?token=${accessToken}`);
+    const socket = io(`http://localhost:8080?token=${accessToken}`);
     const incomingRequests = [];
     attachFriendHandlers(socket, incomingRequests);
 
@@ -73,7 +73,7 @@ async function interactiveClient() {
         const targetName = await rl.question('Target NombreUser to send request: ');
         if (!targetName) { console.log('Target required'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;
@@ -102,7 +102,7 @@ async function interactiveClient() {
         const targetName = await rl.question('User NombreUser to remove friend: ');
         if (!targetName) { console.log('Target required'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;
@@ -120,12 +120,12 @@ async function interactiveClient() {
         const text = await rl.question('Message text: ');
         if (!text) { console.log('Message empty, aborted'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;
           const payload = { fromId: publicUser.id, toId: targetId, texto: text };
-          const r2 = await fetch('http://localhost:3000/chat/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const r2 = await fetch('http://localhost:8080/chat/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           const resp = await r2.json().catch(()=>null);
           if (!r2.ok) { console.error('sendMessage failed', r2.status, resp); } else { console.log('Message sent:', resp); }
         } catch (err) {
@@ -136,11 +136,11 @@ async function interactiveClient() {
         const targetName = await rl.question('Target NombreUser to list thread: ');
         if (!targetName) { console.log('Target required'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;
-          const q = `http://localhost:3000/chat/thread?userA=${encodeURIComponent(publicUser.id)}&userB=${encodeURIComponent(targetId)}`;
+          const q = `http://localhost:8080/chat/thread?userA=${encodeURIComponent(publicUser.id)}&userB=${encodeURIComponent(targetId)}`;
           const r2 = await fetch(q);
           if (!r2.ok) { const e = await r2.json().catch(()=>({})); console.error('thread fetch failed', r2.status, e); continue; }
           const th = await r2.json();

@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path'; // <--- 1. Importar el módulo 'path'
+
 import { 
     crearUsuario, 
     resendVerificationEmail, 
@@ -20,22 +22,32 @@ import { getUserByNombreUser, getUserById, getUsersByIds, getQuestionsByTopic } 
 
 export const app = express()
 
-app.set('port', process.env.PORT || 3000)
+// CORRECCIÓN: Cambiado el puerto por defecto de 3000 a 8080
+// para que coincida con la configuración de exposición de Docker (8080:8080).
+app.set('port', process.env.PORT || 8080) 
 app.set('trust proxy', true)
 app.use(cors())
 app.use(express.json());
 
-// Ruta de prueba
-app.get("/", (req, res) => {
-    res.send("Servidor de la app de Cuestionados activo!");
+// ------------------------------------------------------------------------------------------------
+// CONFIGURACIÓN PARA SERVIR EL FRONTEND DE REACT
+// ------------------------------------------------------------------------------------------------
+
+const buildPath = path.join(path.resolve(), 'public');
+
+// 1. Middleware para servir archivos estáticos (CSS, JS, imágenes, etc.)
+app.use(express.static(buildPath));
+
+// 2. Ruta Catch-all (.*): Sirve index.html para el routing de React (Fijo de paso anterior)
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
 });
 
+// --- FIN CONFIGURACIÓN FRONTEND ---
+
+
 // ------------------------------------------------------------------------------------------------
-// RUTAS DE LA APLICACIÓN
-// ------------------------------------------------------------------------------------------------
-// Cada ruta maneja una funcionalidad específica de la aplicación
-// Las rutas están organizadas por categorías: usuario, partidas, amigos, etc.
-// Cada ruta llama a una función en un archivo separado que maneja la lógica de negocio
+// RUTAS DE LA APLICACIÓN (API REST)
 // ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------

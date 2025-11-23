@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { requireAuthOrRedirect } from '../app';
 
-const BASE = 'http://localhost:3000';
+const BASE = 'http://localhost:8080';
 
 function shuffleArray(a) {
   const arr = a.slice();

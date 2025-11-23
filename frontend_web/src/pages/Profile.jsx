@@ -24,7 +24,7 @@ export default function Profile() {
     // opcional: cargar más info del perfil
     (async () => {
       try {
-        const res = await fetch(`http://localhost:3000/user/byId?id=${encodeURIComponent(me?.id)}`);
+        const res = await fetch(`http://localhost:8080/user/byId?id=${encodeURIComponent(me?.id)}`);
         const j = await res.json().catch(() => null);
         if (res.ok && j) {
           // store stats in state
@@ -58,7 +58,7 @@ export default function Profile() {
   async function updateProfile() {
     setStatus("Guardando...");
     try {
-      const res = await fetch("http://localhost:3000/profile", {
+      const res = await fetch("http://localhost:8080/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

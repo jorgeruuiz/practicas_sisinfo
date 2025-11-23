@@ -4,7 +4,7 @@ import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 
 async function loginUser(nombre, contrasena) {
-  const res = await fetch('http://localhost:3000/login', {
+  const res = await fetch('http://localhost:8080/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ NombreUser: nombre, Contrasena: contrasena })
@@ -50,7 +50,7 @@ async function interactiveClient() {
     const { accessToken, publicUser } = await loginUser(nombre, pass);
     console.log('Logueado:', publicUser.id, publicUser.NombreUser);
 
-    const socket = io(`http://localhost:3000?token=${accessToken}`);
+    const socket = io(`http://localhost:8080?token=${accessToken}`);
     const incomingRequests = [];
     attachFriendHandlers(socket, incomingRequests);
 
@@ -73,7 +73,7 @@ async function interactiveClient() {
         const targetName = await rl.question('Target NombreUser to send request: ');
         if (!targetName) { console.log('Target required'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;
@@ -102,7 +102,7 @@ async function interactiveClient() {
         const targetName = await rl.question('User NombreUser to remove friend: ');
         if (!targetName) { console.log('Target required'); continue; }
         try {
-          const res = await fetch(`http://localhost:3000/user/byName?name=${encodeURIComponent(targetName)}`);
+          const res = await fetch(`http://localhost:8080/user/byName?name=${encodeURIComponent(targetName)}`);
           if (!res.ok) { const e = await res.json().catch(()=>({})); console.error('Lookup failed', e); continue; }
           const body = await res.json();
           const targetId = body.id;

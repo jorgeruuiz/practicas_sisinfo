@@ -34,7 +34,7 @@ import {
   Mail,
 } from "lucide-react";
 
-const BASE = "http://localhost:3000";
+const BASE = "http://localhost:8080";
 
 // ------------------------ AUXILIAR REST ------------------------
 async function fetchUserByName(name) {

@@ -20,7 +20,7 @@ export function getSocket() {
   // We disable autoConnect so the app can control when to start connecting.
   // Prefer 'polling' first to avoid browsers blocking websocket upgrades in some
   // development environments; Socket.IO will upgrade to websocket if available.
-  socket = io('http://localhost:3000', {
+  socket = io('http://localhost:8080', {
     query: { token },
     auth: { token },
     transports: ['polling', 'websocket'],

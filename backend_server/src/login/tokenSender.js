@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 // Función para enviar el correo de verificación
 export const sendVerificationEmail = async (email, token) => {
     const direccion = process.env.NODE_ENV === 'dev' 
-        ? 'http://localhost:3000/verificar' : 'https://<tu_dominio>/verificar';
+        ? 'http://localhost:8080/verificar' : 'https://<tu_dominio>/verificar';
 
     const verificationLink = `${direccion}?token=${token}`;
     const mailOptions = {

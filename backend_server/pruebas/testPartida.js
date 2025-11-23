@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 
 async function runWithCredentials(NombreUser, Contrasena) {
   console.log('Iniciando login...');
-  const res = await fetch('http://localhost:3000/login', {
+  const res = await fetch('http://localhost:8080/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ NombreUser, Contrasena })
@@ -29,7 +29,7 @@ async function runWithCredentials(NombreUser, Contrasena) {
   console.log('Login OK, user id:', publicUser.id);
 
   // Conectar via socket.io con token en query
-  const socket = io(`http://localhost:3000?token=${accessToken}`);
+  const socket = io(`http://localhost:8080?token=${accessToken}`);
 
   socket.on('connect', () => {
     console.log('Socket conectado:', socket.id);

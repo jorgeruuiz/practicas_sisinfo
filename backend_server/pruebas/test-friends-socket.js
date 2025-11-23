@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import fetch from 'node-fetch';
 import { io as Client } from 'socket.io-client';
 
-const BASE = 'http://localhost:3000';
+const BASE = 'http://localhost:8080';
 
 async function ensureUser(nombre, correo) {
   const found = await db.select().from(usuario).where(eq(usuario.Correo, correo));
