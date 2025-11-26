@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPublicUser } from '../app'
+import { getPublicUser, clearAuth } from '../app'
 
 export default function Header() {
   const nav = useNavigate()
@@ -14,8 +14,11 @@ export default function Header() {
             <button className="btn" onClick={() => nav('/menu')}>Menu</button>
           )}
         </div>
-        <div className="text-sm text-muted-foreground">
-          {user?.NombreUser ? `Hola, ${user.NombreUser}` : 'Invitado'}
+        <div className="text-sm text-muted-foreground flex items-center gap-3">
+          <div>{user?.NombreUser ? `Hola, ${user.NombreUser}` : 'Invitado'}</div>
+          {user?.tipoUser === 'admin' && (
+            <button className="btn btn-sm" onClick={() => { clearAuth(); window.location = '/login'; }}>Logout</button>
+          )}
         </div>
       </div>
     </header>
