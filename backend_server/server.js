@@ -156,6 +156,7 @@ async function newConnection(socket) {
   // Eventos de amistad vía WebSocket
   // ------------------------------------------------------------------------------------------
   socket.on("friend:request", async (data) => {
+    console.log('socket event friend:request received ->', data);
     try {
       const fromId = data?.fromId;
       const toId = data?.toId;
@@ -173,6 +174,7 @@ async function newConnection(socket) {
   });
 
   socket.on("friend:accept", async (data) => {
+    console.log('socket event friend:accept received ->', data);
     try {
       const requestId = data?.requestId;
       const accepterId = data?.accepterId;
@@ -220,6 +222,7 @@ async function newConnection(socket) {
   });
 
   socket.on("friend:remove", async (data) => {
+    console.log('socket event friend:remove received ->', data);
     try {
       const userA = data?.userA;
       const userB = data?.userB;

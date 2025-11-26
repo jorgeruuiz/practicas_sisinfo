@@ -20,6 +20,7 @@ import {
     deleteMessage
 } from './src/chat/chat.js';
 import { getUserByNombreUser, getUserById, getUsersByIds, getQuestionsByTopic } from './src/db/db_requests/db_requests.js';
+import { listUsers, deleteUser, createQuestion, deleteQuestion, listQuestions } from './src/admin/admin.js';
 
 export const app = express()
 
@@ -110,17 +111,19 @@ app.get('/user/byId', async (req, res) => {
         if (!id) return res.status(400).json({ error: 'Missing id query' });
         const u = await getUserById(id);
         if (!u) return res.status(404).json({ error: 'User not found' });
-        return res.status(200).json({
-            id: u.id,
-            NombreUser: u.NombreUser,
-            Puntuacion: u.Puntuacion,
-            totalGames: u.totalGames || 0,
-            totalWins: u.totalWins || 0,
-            totalLosses: u.totalLosses || 0,
-            totalDraws: u.totalDraws || 0,
-            actualStreak: u.actualStreak || 0,
-            maxStreak: u.maxStreak || 0
-        });
+            return res.status(200).json({
+                id: u.id,
+                NombreUser: u.NombreUser,
+                Correo: u.Correo,
+                tipoUser: u.tipoUser || 'user',
+                Puntuacion: u.Puntuacion,
+                totalGames: u.totalGames || 0,
+                totalWins: u.totalWins || 0,
+                totalLosses: u.totalLosses || 0,
+                totalDraws: u.totalDraws || 0,
+                actualStreak: u.actualStreak || 0,
+                maxStreak: u.maxStreak || 0
+            });
     } catch (err) {
         console.error('GET /user/byId error', err);
         return res.status(500).json({ error: 'Internal error' });
@@ -165,6 +168,29 @@ app.get('/questions/byTopic', async (req, res) => {
         console.error('GET /questions/byTopic error', err);
         return res.status(500).json({ error: 'Internal error' });
     }
+});
+
+// -------------------------
+// ADMIN: usuarios y preguntas (deben ir antes del static/catch-all)
+// -------------------------
+app.get('/admin/users', async (req, res) => {
+    await listUsers(req, res);
+});
+
+app.delete('/admin/user/:id', async (req, res) => {
+    await deleteUser(req, res);
+});
+
+app.post('/admin/question', async (req, res) => {
+    await createQuestion(req, res);
+});
+
+app.delete('/admin/question/:id', async (req, res) => {
+    await deleteQuestion(req, res);
+});
+
+app.get('/admin/questions', async (req, res) => {
+    await listQuestions(req, res);
 });
 
 // ------------------------------------------------------------------------------------------------

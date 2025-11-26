@@ -54,7 +54,13 @@ export default function Login() {
       } catch (e) {
         console.warn("socket connect failed", e);
       }
-      nav("/menu");
+      // Redirect based on role
+      const tipo = j?.publicUser?.tipoUser || 'user';
+      if (tipo === 'admin') {
+        nav('/admin');
+      } else {
+        nav('/menu');
+      }
     } catch (err) {
       setStatus("Fetch error: " + err.message);
     } finally {

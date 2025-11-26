@@ -9,6 +9,9 @@ import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Friends from "./pages/Friends";
 import Training from "./pages/Training";
+import Admin from "./pages/Admin";
+import AdminQuestions from "./pages/AdminQuestions";
+import AdminUsers from "./pages/AdminUsers";
 import Header from "./components/Header";
 
 export default function App() {
@@ -35,6 +38,9 @@ export default function App() {
   <Route path="/training" element={<Training />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/friends" element={<Friends />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/questions-list" element={<AdminQuestions />} />
+      <Route path="/admin/users-list" element={<AdminUsers />} />
 
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
