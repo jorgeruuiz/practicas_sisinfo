@@ -266,9 +266,7 @@ export default function Game() {
           <div className="font-semibold leading-tight">
             {publicUser?.NombreUser}
           </div>
-          <div className="text-xs text-muted-foreground">
-            Partida {partidaId ?? "—"}
-          </div>
+          {/* Hide raw partida id from UI; we don't want to display the UUID */}
         </div>
       </div>
     </div>
@@ -333,9 +331,8 @@ export default function Game() {
                 {summary.ganador
                   ? summary.ganador === publicUser.id
                     ? "Tú"
-                    : (summary.jugadores || []).find(
-                        (j) => j.id === summary.ganador
-                      )?.nombre || summary.ganador
+                      : (summary.jugadores || []).find((j) => j.id === summary.ganador)
+                          ?.nombre || "Jugador"
                   : "Empate"}
               </div>
               <div className="overflow-x-auto">
@@ -350,7 +347,7 @@ export default function Game() {
                   <tbody>
                     {(summary.jugadores || []).map((p, i) => (
                       <tr key={i} className="border-b last:border-0">
-                        <td className="p-2">{p.nombre || p.id}</td>
+                        <td className="p-2">{p.nombre || `Jugador ${i + 1}`}</td>
                         <td className="p-2">{p.reportedAciertos}</td>
                         <td className="p-2">
                           {p.variacion >= 0 ? `+${p.variacion}` : p.variacion}

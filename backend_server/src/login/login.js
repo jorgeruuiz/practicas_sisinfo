@@ -500,3 +500,63 @@ export async function resetPasswd(req, res) {
     res.status(500).json({ error: "Error al restablecer la contraseña" });
   }
 }
+
+// Cambiar la contraseña del usuario: requiere la contraseña actual
+// -----------------------------------------------------------------------------------------
+export async function changePassword(req, res) {
+  try {
+    const id = req.body.id;
+    const currentPassword = req.body.currentPassword;
+    const newPassword = req.body.newPassword;
+
+    if (!id || !currentPassword || !newPassword) {
+      res.status(400).json({ error: "Faltan campos" });
+      return;
+    }
+
+    if (newPassword.length < 4) {
+      res
+        .status(400)
+        .json({ error: "La contraseña debe tener al menos 4 caracteres" });
+      return;
+    }
+
+    // Buscar usuario
+    const usuarios = await db.select().from(usuario).where(eq(usuario.id, id));
+    if (usuarios.length === 0) {
+      res.status(400).json({ error: "Usuario no encontrado" });
+      return;
+    }
+    const user = usuarios[0];
+
+    // Comprobar estado y verificación de correo
+    if (user.estadoUser !== "logged") {
+      res.status(400).json({
+        error: "Usuario no logueado. Inicie sesión para cambiar su contraseña",
+      });
+      return;
+    }
+    if (user.correoVerificado === "no") {
+      res.status(400).json({
+        error:
+          "Correo no verificado. Por favor, verifica tu correo antes de cambiar la contraseña",
+      });
+      return;
+    }
+
+    // Verificar la contraseña actual
+    const isMatch = await bcrypt.compare(currentPassword, user.Contrasena);
+    if (!isMatch) {
+      res.status(400).json({ error: "Contraseña actual incorrecta" });
+      return;
+    }
+
+    // Hashear y actualizar
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.update(usuario).set({ Contrasena: hashedPassword }).where(eq(usuario.id, user.id));
+    res.json({ message: "Contraseña cambiada correctamente" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error al cambiar la contraseña" });
+  }
+}

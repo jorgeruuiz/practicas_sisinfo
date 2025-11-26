@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { requireAuthOrRedirect, getPublicUser } from "../app";
 import { useSocket } from "../lib/SocketProvider";
 import { useSearchParams, useLocation } from 'react-router-dom'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const BASE = 'http://localhost:8080'
 
@@ -83,6 +85,7 @@ export default function Chat() {
         setThreadLoading(false)
       }
     }
+    // reload thread when the recipient id changes
     if (toUserId) loadThreadFor(toUserId)
   }, [toUserId, me.id])
 
@@ -143,10 +146,10 @@ export default function Chat() {
         return
       }
       const j = await res.json().catch(() => null)
-      // append to local log
+      // append to local log (include recipient name if available)
       setLog((l) => [
         ...l,
-        { from: { id: me.id, nombre: me.NombreUser }, text: msg, id: j?.message?.id },
+        { from: { id: me.id, nombre: me.NombreUser }, to: { id: toUserId, nombre: toUserName || null }, text: msg, id: j?.message?.id },
       ])
       setMsg("")
     } catch (err) { console.debug('sendMessage error', err) }
@@ -167,14 +170,14 @@ export default function Chat() {
                 onChange={(e) => setRoom(e.target.value)}
               />
             </div>
-            <button
-              className="btn"
+            <Button
               onClick={() => {
                 /* re-join ocurre por useEffect al cambiar room */
               }}
+              className="rounded-lg"
             >
               Cambiar sala
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="mb-2">
@@ -186,8 +189,8 @@ export default function Chat() {
 
         <div className="mt-3">
           <div className="flex gap-2">
-            <input
-              className="flex-1 p-2 border rounded"
+            <Input
+              className="flex-1"
               placeholder={isDirect ? "Escribe un mensaje directo…" : "Escribe un mensaje para la sala…"}
               value={msg}
               onChange={(e) => setMsg(e.target.value)}
@@ -198,9 +201,9 @@ export default function Chat() {
                 }
               }}
             />
-            <button className="btn-primary" onClick={() => (isDirect ? sendDirect() : sendToRoom())}>
+            <Button onClick={() => (isDirect ? sendDirect() : sendToRoom())} className="rounded-lg">
               Enviar
-            </button>
+            </Button>
           </div>
         </div>
       </div>

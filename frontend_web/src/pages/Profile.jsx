@@ -19,6 +19,7 @@ export default function Profile() {
   const [status, setStatus] = useState("");
   const [nombre, setNombre] = useState(me?.NombreUser || "");
   const [clave, setClave] = useState("");
+  const [currentClave, setCurrentClave] = useState("");
 
   useEffect(() => {
     // opcional: cargar más info del perfil
@@ -58,24 +59,42 @@ export default function Profile() {
   async function updateProfile() {
     setStatus("Guardando...");
     try {
-      const res = await fetch("http://localhost:8080/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          NombreUser: nombre,
-          Contrasena: clave || undefined,
-        }),
-      });
-      const j = await res.json();
-      if (!res.ok) {
-        setStatus("Error: " + (j?.message || JSON.stringify(j)));
+      // Si el usuario quiere cambiar la contraseña, pedir la contraseña actual
+      if (clave) {
+        if (!currentClave) {
+          setStatus("Introduce tu contraseña actual para cambiarla.");
+          return;
+        }
+        const res = await fetch("http://localhost:8080/changePassword", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: me.id, currentPassword: currentClave, newPassword: clave }),
+        });
+        const j = await res.json().catch(() => null);
+        if (!res.ok) {
+          setStatus("Error: " + ((j && (j.message || j.error)) || `HTTP ${res.status}`));
+          return;
+        }
+        setClave("");
+        setCurrentClave("");
+        setStatus("Contraseña cambiada ✅");
         return;
       }
-      // si backend devuelve el nuevo publicUser y/o un token refrescado:
-      if (j?.publicUser && j?.accessToken) {
-        saveAuth(j.accessToken, j.publicUser);
+
+      // Solo actualizar nombre/ foto de perfil usando el endpoint existente
+      const res2 = await fetch("http://localhost:8080/editUser", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: me.id, NombreUser: nombre, FotoPerfil: "none" }),
+      });
+      const j2 = await res2.json().catch(() => null);
+      if (!res2.ok) {
+        setStatus("Error: " + ((j2 && (j2.message || j2.error)) || `HTTP ${res2.status}`));
+        return;
       }
-      setClave("");
+      if (j2?.publicUser && j2?.accessToken) {
+        saveAuth(j2.accessToken, j2.publicUser);
+      }
       setStatus("Perfil actualizado ✅");
     } catch (e) {
       setStatus("Fetch error: " + e.message);
@@ -108,9 +127,9 @@ export default function Profile() {
         <div>
           <label className="block text-sm mb-1">Nombre de usuario</label>
           <input
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded bg-gray-50"
             value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            readOnly
           />
         </div>
         <div>
@@ -124,6 +143,20 @@ export default function Profile() {
             onChange={(e) => setClave(e.target.value)}
           />
         </div>
+        {/*
+          If the user provides a new password, require their current password
+        */}
+        {clave ? (
+          <div>
+            <label className="block text-sm mb-1">Contraseña actual</label>
+            <input
+              type="password"
+              className="w-full p-2 border rounded"
+              value={currentClave}
+              onChange={(e) => setCurrentClave(e.target.value)}
+            />
+          </div>
+        ) : null}
         <Button className="h-11 rounded-xl" onClick={updateProfile}>
           Guardar cambios
         </Button>

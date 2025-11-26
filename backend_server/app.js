@@ -10,7 +10,8 @@ import {
     logout, 
     editUser, 
     sendPasswdReset, 
-    resetPasswd 
+    resetPasswd,
+    changePassword
 } from './src/login/login.js';
 
 import {
@@ -28,23 +29,6 @@ app.set('port', process.env.PORT || 8080)
 app.set('trust proxy', true)
 app.use(cors())
 app.use(express.json());
-
-// ------------------------------------------------------------------------------------------------
-// CONFIGURACIÓN PARA SERVIR EL FRONTEND DE REACT
-// ------------------------------------------------------------------------------------------------
-
-const buildPath = path.join(path.resolve(), 'public');
-
-// 1. Middleware para servir archivos estáticos (CSS, JS, imágenes, etc.)
-app.use(express.static(buildPath));
-
-// 2. Ruta Catch-all (.*): Sirve index.html para el routing de React (Fijo de paso anterior)
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-});
-
-// --- FIN CONFIGURACIÓN FRONTEND ---
-
 
 // ------------------------------------------------------------------------------------------------
 // RUTAS DE LA APLICACIÓN (API REST)
@@ -83,6 +67,11 @@ app.post('/sendPasswdReset', async (req, res) => {
 
 app.post('/tryResetPasswd', async (req, res) => {
     await resetPasswd(req, res);
+});
+
+// Cambiar contraseña (requiere contraseña actual)
+app.post('/changePassword', async (req, res) => {
+    await changePassword(req, res);
 });
 
 // ------------------------------------------------------------------------------------------------
@@ -176,4 +165,19 @@ app.get('/questions/byTopic', async (req, res) => {
         console.error('GET /questions/byTopic error', err);
         return res.status(500).json({ error: 'Internal error' });
     }
+});
+
+// ------------------------------------------------------------------------------------------------
+// CONFIGURACIÓN PARA SERVIR EL FRONTEND DE REACT
+// (static + catch-all debe ir AL FINAL para no interceptar rutas API)
+// ------------------------------------------------------------------------------------------------
+
+const buildPath = path.join(path.resolve(), 'public');
+
+// Middleware para servir archivos estáticos (CSS, JS, imágenes, etc.)
+app.use(express.static(buildPath));
+
+// Ruta Catch-all (.*): Sirve index.html para el routing de React
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
 });

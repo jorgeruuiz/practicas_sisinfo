@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { requireAuthOrRedirect, getPublicUser } from "../app";
 import { useSocket } from "../lib/SocketProvider";
+import { connect } from "../lib/socketClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from 'react-router-dom'
 
@@ -91,6 +92,15 @@ export default function Friends() {
 
   // ------------------------ EVENTOS SOCKET ------------------------
   useEffect(() => {
+    // Ensure the socket connection is initiated automatically when
+    // the Friends page mounts. `connect()` is idempotent and will
+    // create/connect the singleton socket if a token is available.
+    try {
+      connect();
+    } catch (e) {
+      console.debug('socket connect failed', e);
+    }
+
     if (!socket) return;
 
     const onConnect = () => {
@@ -112,7 +122,23 @@ export default function Friends() {
     };
 
     const onIncoming = (d) => {
-      if (d?.id) setIncoming((prev) => [...prev, d]);
+        if (!d) return;
+        // d: { fromId, id } emitted by server when a new request arrives
+        const fromId = d.fromId || d.Remitente || d.from || null;
+        const item = { id: d.id || d.ID || null, Remitente: fromId };
+        // try to resolve name asynchronously
+        (async () => {
+          try {
+            if (fromId) {
+              const r = await fetch(`${BASE}/user/byId?id=${encodeURIComponent(fromId)}`);
+              if (r.ok) {
+                const u = await r.json().catch(() => null);
+                if (u && u.NombreUser) item.RemitenteName = u.NombreUser;
+              }
+            }
+          } catch (e) { /* ignore */ }
+          setIncoming((prev) => [...prev, item]);
+        })();
     };
     const onAccepted = (d) => {
       console.debug('friend:accepted', d)
@@ -137,7 +163,24 @@ export default function Friends() {
     };
     const onPending = (rows) => {
       console.debug('friend:list:pending:ok', rows.length)
-      setIncoming(rows);
+      // rows from backend are DB rows with Remitente field (id). Resolve names when possible.
+      (async () => {
+        const resolved = await Promise.all((rows || []).map(async (r) => {
+          const out = { ...r };
+          try {
+            const id = r.Remitente || r.fromId || r.RemitenteId;
+            if (id) {
+              const res = await fetch(`${BASE}/user/byId?id=${encodeURIComponent(id)}`);
+              if (res.ok) {
+                const u = await res.json().catch(() => null);
+                if (u && u.NombreUser) out.RemitenteName = u.NombreUser;
+              }
+            }
+          } catch (e) { /* ignore */ }
+          return out;
+        }));
+        setIncoming(resolved);
+      })();
     };
     const onRefresh = () => {
       console.debug('friend:list:refresh')
@@ -181,6 +224,22 @@ export default function Friends() {
     };
   }, [socket, me?.id]);
 
+  // Helper: ensure socket is connected (wait up to `timeoutMs`) before emitting
+  async function ensureSocketConnected(timeoutMs = 2000) {
+    if (!socket) {
+      // try to create/connect
+      try { connect(); } catch (e) { /* ignore */ }
+    }
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      if (socket && socket.connected) return true;
+      // small delay
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    throw new Error('socket-not-connected');
+  }
+
   // ------------------------ ACCIONES UI ------------------------
   async function sendFriendRequest() {
     if (!targetToAdd.trim()) return;
@@ -188,6 +247,12 @@ export default function Friends() {
     setStatus("Enviando solicitud…");
     try {
       const user = await fetchUserByName(targetToAdd.trim());
+      // ensure socket connected before emitting
+      try {
+        await ensureSocketConnected(3000);
+      } catch (e) {
+        console.debug('socket not connected, attempting emit anyway', e);
+      }
       socket.emit("friend:request", { fromId: me.id, toId: user.id });
       console.debug('emit friend:request', { from: me.id, to: user.id })
       setStatus("Solicitud enviada ✅");
@@ -214,6 +279,9 @@ export default function Friends() {
     setStatus("Eliminando amistad…");
     try {
       const user = await fetchUserByName(targetToRemove.trim());
+      try {
+        await ensureSocketConnected(3000);
+      } catch (e) { console.debug('socket not connected, sending anyway', e); }
       socket.emit("friend:remove", { userA: me.id, userB: user.id });
       console.debug('emit friend:remove', { A: me.id, B: user.id })
       setStatus("Amistad eliminada ✅");
@@ -244,13 +312,9 @@ export default function Friends() {
                 </Avatar>
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    Amigos
+                    <span className="font-medium">{me?.NombreUser}</span>
                     {connectionBadge}
                   </CardTitle>
-                  <CardDescription>
-                    <span className="font-medium">{me?.NombreUser}</span> · ID:{" "}
-                    {me?.id}
-                  </CardDescription>
                 </div>
               </div>
               <Users className="h-6 w-6 text-muted-foreground" />
@@ -275,7 +339,7 @@ export default function Friends() {
                       {knownFriends.map((f) => (
                         <div
                           key={f.id}
-                          onClick={() => nav(`/chat?userId=${f.id}`)}
+                          onClick={() => nav(`/chat?userId=${f.id}`, { state: { userName: f.nombre } })}
                           className="flex items-center justify-between p-2 border rounded-lg cursor-pointer hover:bg-muted/30"
                         >
                           <div className="flex items-center gap-2">
@@ -285,7 +349,7 @@ export default function Friends() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="text-sm">
-                              {f.nombre || f.NombreUser || f.id}
+                              {f.nombre || 'Usuario'}
                             </div>
                           </div>
                           <div className="text-xs text-muted-foreground">Chat →</div>
@@ -316,9 +380,8 @@ export default function Friends() {
                         >
                           <div className="text-xs">
                             <div>
-                              <strong>Request:</strong> {r.id}
+                              <div className="font-medium">{r.RemitenteName || r.Remitente || r.fromId || 'Desconocido'}</div>
                             </div>
-                            <div>De: {r.Remitente || r.fromId}</div>
                           </div>
                           <Button
                             size="sm"

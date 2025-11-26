@@ -123,7 +123,7 @@ export default function Training() {
       {loading && <div className="card p-4">Cargando preguntas…</div>}
 
       {!loading && questions.length === 0 && !finished && (
-        <div className="card p-4">No hay preguntas cargadas. Pulsa "Cargar" para obtener preguntas de la temática.</div>
+        <div className="card p-4">No hay preguntas cargadas. Haz clic en una temática para cargar automáticamente las preguntas.</div>
       )}
 
       {finished && (

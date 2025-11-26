@@ -26,6 +26,7 @@ export default function Register() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
+  const [confirmClave, setConfirmClave] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -34,6 +35,10 @@ export default function Register() {
   async function doRegister() {
     if (!nombre || !correo || !clave) {
       setStatus("Rellena nombre, correo y contraseña.");
+      return;
+    }
+    if (clave !== confirmClave) {
+      setStatus("Las contraseñas no coinciden.");
       return;
     }
     setLoading(true);
@@ -131,6 +136,20 @@ export default function Register() {
                   placeholder="********"
                   value={clave}
                   onChange={(e) => setClave(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmClave">Confirmar contraseña</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmClave"
+                  type="password"
+                  placeholder="********"
+                  value={confirmClave}
+                  onChange={(e) => setConfirmClave(e.target.value)}
                   className="pl-9"
                 />
               </div>
